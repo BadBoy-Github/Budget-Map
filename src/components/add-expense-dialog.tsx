@@ -20,11 +20,13 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { categories } from '@/lib/data';
 import type { Expense } from '@/lib/types';
+import { Textarea } from './ui/textarea';
 
 const expenseSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   amount: z.coerce.number().positive({ message: 'Amount must be a positive number.' }),
   category: z.string({ required_error: 'Please select a category.' }),
+  notes: z.string().optional(),
 });
 
 type AddExpenseDialogProps = {
@@ -39,6 +41,7 @@ export function AddExpenseDialog({ onAddExpense, disabled }: AddExpenseDialogPro
     defaultValues: {
       name: '',
       amount: 0,
+      notes: '',
     },
   });
 
@@ -48,6 +51,7 @@ export function AddExpenseDialog({ onAddExpense, disabled }: AddExpenseDialogPro
         name: '',
         amount: 0,
         category: undefined,
+        notes: '',
       });
     }
   }, [open, form]);
@@ -121,6 +125,19 @@ export function AddExpenseDialog({ onAddExpense, disabled }: AddExpenseDialogPro
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="e.g. Lunch meeting with client" {...field} />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

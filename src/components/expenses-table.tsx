@@ -16,11 +16,13 @@ import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { categories } from '@/lib/data';
 import type { Expense } from '@/lib/types';
+import { Textarea } from './ui/textarea';
 
 const expenseSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   amount: z.coerce.number().positive({ message: 'Amount must be a positive number.' }),
   category: z.string({ required_error: 'Please select a category.' }),
+  notes: z.string().optional(),
 });
 
 interface ExpensesTableProps {
@@ -43,6 +45,7 @@ export function ExpensesTable({ expenses, onUpdateExpense, onDeleteExpense }: Ex
       name: expense.name,
       amount: expense.amount,
       category: expense.category,
+      notes: expense.notes || '',
     });
   };
 
@@ -69,6 +72,7 @@ export function ExpensesTable({ expenses, onUpdateExpense, onDeleteExpense }: Ex
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Category</TableHead>
+            <TableHead>Notes</TableHead>
             <TableHead className="text-right">Amount</TableHead>
             <TableHead className="w-[50px]"></TableHead>
           </TableRow>
@@ -87,6 +91,7 @@ export function ExpensesTable({ expenses, onUpdateExpense, onDeleteExpense }: Ex
                     </Badge>
                   )}
                 </TableCell>
+                <TableCell className="max-w-[200px] truncate text-muted-foreground" title={expense.notes}>{expense.notes || '-'}</TableCell>
                 <TableCell className="text-right">₹{expense.amount.toFixed(2)}</TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -150,6 +155,13 @@ export function ExpensesTable({ expenses, onUpdateExpense, onDeleteExpense }: Ex
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="notes" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes (Optional)</FormLabel>
+                  <FormControl><Textarea placeholder="e.g. Lunch meeting with client" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />

@@ -6,6 +6,7 @@ export type Expense = {
   amount: number;
   category: string; // Category name
   date: string; // YYYY-MM-DD
+  notes?: string;
 };
 
 export type Category = {
