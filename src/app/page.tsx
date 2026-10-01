@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { AppLayout } from "@/components/app-layout";
 import { DashboardContent } from "@/components/dashboard-content";
 import type { Expense, MonthlyBudget } from "@/lib/types";
@@ -10,100 +10,150 @@ export default function Home() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [monthlyBudgets, setMonthlyBudgets] = useState<MonthlyBudget[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Load data from localStorage on initial client-side render
-  useEffect(() => {
+  // ─── Fetch all data from MongoDB on initial load ───────────────────────────
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
     try {
-      const storedExpenses = localStorage.getItem('my-wallet-expenses');
-      if (storedExpenses) {
-        setExpenses(JSON.parse(storedExpenses));
+      const [expensesRes, budgetsRes] = await Promise.all([
+        fetch('/api/expenses'),
+        fetch('/api/budgets'),
+      ]);
+      if (expensesRes.ok) {
+        const data: Expense[] = await expensesRes.json();
+        setExpenses(data);
       }
-      const storedBudgets = localStorage.getItem('my-wallet-budgets');
-      if (storedBudgets) {
-        setMonthlyBudgets(JSON.parse(storedBudgets));
+      if (budgetsRes.ok) {
+        const data: MonthlyBudget[] = await budgetsRes.json();
+        setMonthlyBudgets(data);
       }
     } catch (error) {
-      console.error("Failed to parse data from localStorage", error);
+      console.error('Failed to fetch data from MongoDB', error);
+    } finally {
+      setIsLoading(false);
+      setSelectedMonth(new Date());
     }
-    // Set the initial month on the client to avoid hydration errors
-    setSelectedMonth(new Date());
   }, []);
 
-  // Save data to localStorage whenever it changes
   useEffect(() => {
-    // We only save when selectedMonth is not null, which means we are on the client
-    // and initialization is complete.
-    if (selectedMonth) {
-      localStorage.setItem('my-wallet-expenses', JSON.stringify(expenses));
-      localStorage.setItem('my-wallet-budgets', JSON.stringify(monthlyBudgets));
-    }
-  }, [expenses, monthlyBudgets, selectedMonth]);
+    fetchData();
+  }, [fetchData]);
 
-  const handleAddExpense = (newExpense: Omit<Expense, 'id' | 'date'>) => {
+  // ─── Add Expense ───────────────────────────────────────────────────────────
+  const handleAddExpense = async (newExpense: Omit<Expense, 'id' | 'date'>) => {
     if (!selectedMonth) return;
-    setExpenses(prev => [{ 
-      ...newExpense, 
-      id: Date.now().toString(),
-      date: format(selectedMonth, 'yyyy-MM-dd')
-    }, ...prev]);
-  };
-
-  const handleUpdateExpense = (updatedExpense: Expense) => {
-    setExpenses(prev => prev.map(exp => exp.id === updatedExpense.id ? updatedExpense : exp));
-  };
-
-  const handleDeleteExpense = (id: string) => {
-    setExpenses(prev => prev.filter(exp => exp.id !== id));
-  };
-
-  const handleUpdateBudget = (newTotal: number) => {
-    if (!selectedMonth) return;
-    const monthKey = format(selectedMonth, 'yyyy-MM');
-    setMonthlyBudgets(prev => {
-      const existingBudgetIndex = prev.findIndex(b => b.month === monthKey);
-      if (existingBudgetIndex > -1) {
-        const newBudgets = [...prev];
-        newBudgets[existingBudgetIndex] = { ...newBudgets[existingBudgetIndex], total: newTotal };
-        return newBudgets;
-      } else {
-        return [...prev, { month: monthKey, total: newTotal }];
+    try {
+      const res = await fetch('/api/expenses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...newExpense,
+          date: format(selectedMonth, 'yyyy-MM-dd'),
+        }),
+      });
+      if (res.ok) {
+        const created: Expense = await res.json();
+        setExpenses(prev => [created, ...prev]);
       }
-    });
+    } catch (error) {
+      console.error('Failed to add expense', error);
+    }
   };
 
-  const handlePrevMonth = () => {
-    setSelectedMonth(prev => prev ? subMonths(prev, 1) : null);
+  // ─── Update Expense ────────────────────────────────────────────────────────
+  const handleUpdateExpense = async (updatedExpense: Expense) => {
+    try {
+      const res = await fetch(`/api/expenses/${updatedExpense.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedExpense),
+      });
+      if (res.ok) {
+        const saved: Expense = await res.json();
+        setExpenses(prev => prev.map(exp => exp.id === saved.id ? saved : exp));
+      }
+    } catch (error) {
+      console.error('Failed to update expense', error);
+    }
   };
 
-  const handleNextMonth = () => {
-    setSelectedMonth(prev => prev ? addMonths(prev, 1) : null);
+  // ─── Delete Expense ────────────────────────────────────────────────────────
+  const handleDeleteExpense = async (id: string) => {
+    try {
+      const res = await fetch(`/api/expenses/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setExpenses(prev => prev.filter(exp => exp.id !== id));
+      }
+    } catch (error) {
+      console.error('Failed to delete expense', error);
+    }
   };
 
-  const handleDeleteMonthExpenses = () => {
+  // ─── Update Budget ─────────────────────────────────────────────────────────
+  const handleUpdateBudget = async (newTotal: number) => {
     if (!selectedMonth) return;
     const monthKey = format(selectedMonth, 'yyyy-MM');
-    setExpenses(prev => prev.filter(exp => !isSameMonth(new Date(exp.date), selectedMonth)));
-    setMonthlyBudgets(prev => prev.filter(b => b.month !== monthKey));
+    try {
+      const res = await fetch('/api/budgets', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ month: monthKey, total: newTotal }),
+      });
+      if (res.ok) {
+        const saved: MonthlyBudget = await res.json();
+        setMonthlyBudgets(prev => {
+          const existingIndex = prev.findIndex(b => b.month === saved.month);
+          if (existingIndex > -1) {
+            const updated = [...prev];
+            updated[existingIndex] = saved;
+            return updated;
+          }
+          return [...prev, saved];
+        });
+      }
+    } catch (error) {
+      console.error('Failed to update budget', error);
+    }
   };
 
+  // ─── Delete Month ──────────────────────────────────────────────────────────
+  const handleDeleteMonthExpenses = async () => {
+    if (!selectedMonth) return;
+    const monthKey = format(selectedMonth, 'yyyy-MM');
+    try {
+      const res = await fetch(`/api/budgets/month/${monthKey}`, { method: 'DELETE' });
+      if (res.ok) {
+        setExpenses(prev => prev.filter(exp => !isSameMonth(new Date(exp.date), selectedMonth)));
+        setMonthlyBudgets(prev => prev.filter(b => b.month !== monthKey));
+      }
+    } catch (error) {
+      console.error('Failed to delete month data', error);
+    }
+  };
+
+  // ─── Navigation ───────────────────────────────────────────────────────────
+  const handlePrevMonth = () => setSelectedMonth(prev => prev ? subMonths(prev, 1) : null);
+  const handleNextMonth = () => setSelectedMonth(prev => prev ? addMonths(prev, 1) : null);
+
+  // ─── Derived Data ─────────────────────────────────────────────────────────
   const { currentMonthExpenses, previousMonthExpenses, currentBudget } = useMemo(() => {
     if (!selectedMonth) {
       return { currentMonthExpenses: [], previousMonthExpenses: [], currentBudget: null };
     }
-    
     const monthKey = format(selectedMonth, 'yyyy-MM');
     const lastMonthDate = subMonths(selectedMonth, 1);
-    
+
     const current = expenses.filter(expense => isSameMonth(new Date(expense.date), selectedMonth));
     const previous = expenses.filter(expense => isSameMonth(new Date(expense.date), lastMonthDate));
     const budget = monthlyBudgets.find(b => b.month === monthKey)?.total ?? null;
 
     return { currentMonthExpenses: current, previousMonthExpenses: previous, currentBudget: budget };
   }, [expenses, monthlyBudgets, selectedMonth]);
-  
+
   const isBudgetSet = currentBudget !== null;
-  
-  if (!selectedMonth) {
+
+  if (!selectedMonth || isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <p className="text-muted-foreground">Loading dashboard...</p>
@@ -112,7 +162,7 @@ export default function Home() {
   }
 
   return (
-    <AppLayout 
+    <AppLayout
       onAddExpense={handleAddExpense}
       selectedMonth={selectedMonth}
       onPrevMonth={handlePrevMonth}
@@ -120,14 +170,14 @@ export default function Home() {
       onDeleteMonthExpenses={handleDeleteMonthExpenses}
       isBudgetSet={isBudgetSet}
     >
-        <DashboardContent
-          currentMonthExpenses={currentMonthExpenses}
-          previousMonthExpenses={previousMonthExpenses}
-          onUpdateExpense={handleUpdateExpense}
-          onDeleteExpense={handleDeleteExpense}
-          budgetGoal={currentBudget}
-          onUpdateBudget={handleUpdateBudget}
-        />
+      <DashboardContent
+        currentMonthExpenses={currentMonthExpenses}
+        previousMonthExpenses={previousMonthExpenses}
+        onUpdateExpense={handleUpdateExpense}
+        onDeleteExpense={handleDeleteExpense}
+        budgetGoal={currentBudget}
+        onUpdateBudget={handleUpdateBudget}
+      />
     </AppLayout>
   );
 }
