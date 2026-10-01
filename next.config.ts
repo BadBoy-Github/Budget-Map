@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Required for Vercel serverless: prevents bundling mongoose's native binaries
+  serverExternalPackages: ['mongoose'],
   images: {
     remotePatterns: [
       {
