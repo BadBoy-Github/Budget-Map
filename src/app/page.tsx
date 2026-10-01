@@ -5,6 +5,7 @@ import { AppLayout } from "@/components/app-layout";
 import { DashboardContent } from "@/components/dashboard-content";
 import type { Expense, MonthlyBudget } from "@/lib/types";
 import { format, subMonths, addMonths, isSameMonth } from 'date-fns';
+import { LoadingSpinner } from '@/components/loading-spinner';
 
 export default function Home() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -154,11 +155,7 @@ export default function Home() {
   const isBudgetSet = currentBudget !== null;
 
   if (!selectedMonth || isLoading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <p className="text-muted-foreground">Loading dashboard...</p>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
