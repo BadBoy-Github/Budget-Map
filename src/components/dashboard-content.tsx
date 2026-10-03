@@ -18,6 +18,15 @@ interface DashboardContentProps {
   onUpdateBudget: (newGoal: number) => void;
 }
 
+// Labels read like margin notes pinned above each figure
+function StatLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <CardTitle className="wavy-underline inline-block text-base font-bold sm:text-lg">
+      {children}
+    </CardTitle>
+  );
+}
+
 export function DashboardContent({ 
   currentMonthExpenses, 
   previousMonthExpenses,
@@ -72,12 +81,15 @@ export function DashboardContent({
     return `${ratio > 0 ? '+' : ''}${ratio.toFixed(0)}%`;
   }, [totalSpent, previousTotalSpent, budgetGoal, previousMonthExpenses]);
 
+  const locked = !isBudgetSet;
+
   return (
-      <div className="space-y-6">
+      <div className="space-y-6 md:space-y-8">
         <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Monthly Budget</CardTitle>
+          {/* The headline number lives on a pinned post-it */}
+          <Card decoration="tack" className="bg-postit text-postit-foreground hover:-rotate-1">
+            <CardHeader className="flex flex-row items-start justify-between gap-2 pb-2">
+              <StatLabel>Monthly Budget</StatLabel>
               <EditBudgetDialog 
                 onUpdateBudget={onUpdateBudget} 
                 currentBudget={budgetGoal ?? 0} 
@@ -87,41 +99,57 @@ export function DashboardContent({
             <CardContent>
               {isBudgetSet ? (
                 <>
-                  <div className="text-2xl font-bold">₹{(budgetGoal ?? 0).toLocaleString()}</div>
-                  <p className="text-xs text-muted-foreground">Your total budget for this month</p>
+                  <div className="font-headline text-3xl font-bold leading-none sm:text-4xl">
+                    ₹{(budgetGoal ?? 0).toLocaleString()}
+                  </div>
+                  <p className="mt-1 text-sm text-foreground/70 sm:text-base">
+                    Your total budget for this month
+                  </p>
                   <Progress value={budgetProgress} className="mt-4" />
-                  <div className="mt-2 flex justify-between text-sm text-muted-foreground">
-                    <span>Spent: ₹{totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                    <span>Left: ₹{budgetLeft.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <div className="mt-3 flex flex-wrap justify-between gap-x-3 gap-y-1 text-base text-foreground/80">
+                    <span>
+                      Spent: ₹{totalSpent.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                    <span>
+                      Left: ₹{budgetLeft.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
                   </div>
                 </>
               ) : (
-                <div className="flex h-[116px] flex-col items-center justify-center text-center">
-                  <p className="font-medium text-muted-foreground">Set a budget to get started.</p>
-                  <p className="text-sm text-muted-foreground">Any expenses will be tracked against it.</p>
+                <div className="flex h-[116px] flex-col items-center justify-center gap-1 text-center">
+                  <p className="font-headline text-xl font-bold">Set a budget to get started.</p>
+                  <p className="text-base text-foreground/70">
+                    Any expenses will be tracked against it.
+                  </p>
                 </div>
               )}
             </CardContent>
           </Card>
           
-          <div className={cn("space-y-6", !isBudgetSet && "opacity-40 pointer-events-none")}>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Top Spending Category</CardTitle>
+          <div className={cn("grid gap-6 sm:grid-cols-2 md:grid-cols-1", locked && "pointer-events-none opacity-50 saturate-50")}>
+            <Card className="hover:rotate-1">
+              <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+                <StatLabel>Top Spending Category</StatLabel>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{topCategory}</div>
-                <p className="text-xs text-muted-foreground">Your highest expenditure this month.</p>
+                <div className="font-headline text-2xl font-bold leading-tight sm:text-3xl">
+                  {topCategory}
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+                  Your highest expenditure this month.
+                </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Saved vs Last Month</CardTitle>
+            <Card className="hover:-rotate-1">
+              <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
+                <StatLabel>Saved vs Last Month</StatLabel>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{savedRatio}</div>
-                <p className="text-xs text-muted-foreground">
+                <div className="font-headline text-2xl font-bold leading-tight sm:text-3xl">
+                  {savedRatio}
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground sm:text-base">
                   {previousMonthExpenses.length === 0 
                     ? 'No previous month record.' 
                     : 'Change in savings from previous month.'
@@ -132,9 +160,14 @@ export function DashboardContent({
           </div>
         </div>
 
-        <Card className={cn(!isBudgetSet && "opacity-40 pointer-events-none")}>
+        <Card decoration="tape" className={cn("hover:rotate-[0.5deg]", locked && "pointer-events-none opacity-50 saturate-50")}>
           <CardHeader>
-            <CardTitle>Spending Overview</CardTitle>
+            <div className="flex flex-wrap items-center gap-2">
+              <CardTitle>Spending Overview</CardTitle>
+              <span className="rounded-sm border-2 border-foreground bg-postit px-1.5 py-0.5 font-headline text-xs font-bold uppercase tracking-wide">
+                by category
+              </span>
+            </div>
             <CardDescription>A look at your spending by category for the selected month.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -142,9 +175,14 @@ export function DashboardContent({
           </CardContent>
         </Card>
 
-        <Card className={cn(!isBudgetSet && "opacity-40 pointer-events-none")}>
+        <Card decoration="tape" className={cn("hover:-rotate-[0.5deg]", locked && "pointer-events-none opacity-50 saturate-50")}>
           <CardHeader>
-            <CardTitle>Monthly Expenses</CardTitle>
+            <div className="flex flex-wrap items-center gap-2">
+              <CardTitle>Monthly Expenses</CardTitle>
+              <span className="rounded-sm border-2 border-foreground bg-secondary px-1.5 py-0.5 font-headline text-xs font-bold uppercase tracking-wide">
+                {currentMonthExpenses.length} item{currentMonthExpenses.length === 1 ? '' : 's'}
+              </span>
+            </div>
             <CardDescription>A list of all your recorded expenses for the selected month.</CardDescription>
           </CardHeader>
           <CardContent>

@@ -64,9 +64,10 @@ export function AddExpenseDialog({ onAddExpense, disabled }: AddExpenseDialogPro
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button disabled={disabled}>
-          <PlusCircle className="mr-2" />
-          Add Expense
+        <Button disabled={disabled} className="shrink-0">
+          <PlusCircle className="stroke-[2.5]" />
+          <span className="hidden sm:inline">Add Expense</span>
+          <span className="sr-only sm:hidden">Add Expense</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
@@ -118,7 +119,7 @@ export function AddExpenseDialog({ onAddExpense, disabled }: AddExpenseDialogPro
                       {categories.map((cat) => (
                         <SelectItem key={cat.name} value={cat.name}>
                           <div className="flex items-center gap-2">
-                            <cat.icon className="h-4 w-4" />
+                            <cat.icon className="size-4 shrink-0" />
                             {cat.name}
                           </div>
                         </SelectItem>

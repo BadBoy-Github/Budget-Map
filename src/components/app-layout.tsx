@@ -27,32 +27,61 @@ export function AppLayout({
   isBudgetSet: boolean;
 }) {
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background">
-      <header className="sticky top-0 flex h-16 items-center justify-between gap-4 border-b bg-background px-4 md:px-6 z-10">
-        <div className="flex items-center gap-2">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Icons.logo className="size-6" />
-          </div>
-          <span className="text-xl font-bold font-headline">Budget Map</span>
-        </div>
-        
-        <div className="flex items-center gap-x-2 sm:gap-x-4">
-          <div className="flex items-center gap-x-1 sm:gap-x-2">
-            <Button variant="outline" size="icon" onClick={onPrevMonth} className="h-8 w-8" disabled={!selectedMonth}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm sm:text-lg font-medium w-28 sm:w-32 text-center">
-              {selectedMonth ? format(selectedMonth, "MMMM yyyy") : '...'}
+    <div className="flex min-h-dvh w-full flex-col bg-background">
+      <header className="sticky top-0 z-30 border-b-[3px] border-foreground bg-background/95 backdrop-blur-[2px]">
+        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-3 px-4 py-3 sm:py-2 md:px-8">
+          <div className="flex items-center gap-2.5">
+            {/* Logo stamped on the page, slightly off-kilter */}
+            <div className="flex h-11 w-11 -rotate-3 items-center justify-center rounded-md border-[3px] border-foreground bg-primary text-primary-foreground shadow-sketch">
+              <Icons.logo className="size-6 stroke-[2.5]" />
+            </div>
+            <span className="wavy-underline font-headline text-2xl font-bold leading-none sm:text-3xl">
+              Budget Map
             </span>
-            <Button variant="outline" size="icon" onClick={onNextMonth} className="h-8 w-8" disabled={!selectedMonth}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
           </div>
-          {selectedMonth && <DeleteMonthDialog onDelete={onDeleteMonthExpenses} selectedMonth={selectedMonth} disabled={!isBudgetSet} />}
-          <AddExpenseDialog onAddExpense={onAddExpense} disabled={!isBudgetSet || !selectedMonth} />
+
+          <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:flex-nowrap sm:gap-3">
+            {/* Month pager — the month itself reads like a pinned sticky note */}
+            <div className="flex shrink items-center gap-1.5 sm:gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onPrevMonth}
+                aria-label="Previous month"
+                disabled={!selectedMonth}
+                className="shrink-0"
+              >
+                <ChevronLeft className="stroke-[2.5]" />
+              </Button>
+              <span
+                className="-rotate-1 whitespace-nowrap rounded-sm border-2 border-foreground bg-postit px-1.5 py-0.5 text-center font-headline text-base font-bold shadow-sketch-sm sm:text-lg"
+                aria-live="polite"
+              >
+                {selectedMonth ? format(selectedMonth, "MMM yyyy") : '...'}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onNextMonth}
+                aria-label="Next month"
+                disabled={!selectedMonth}
+                className="shrink-0"
+              >
+                <ChevronRight className="stroke-[2.5]" />
+              </Button>
+            </div>
+            {selectedMonth && (
+              <DeleteMonthDialog
+                onDelete={onDeleteMonthExpenses}
+                selectedMonth={selectedMonth}
+                disabled={!isBudgetSet}
+              />
+            )}
+            <AddExpenseDialog onAddExpense={onAddExpense} disabled={!isBudgetSet || !selectedMonth} />
+          </div>
         </div>
       </header>
-      <main className="flex-1 p-4 md:p-6">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-5 sm:py-6 md:px-8 md:py-8">
         {children}
       </main>
     </div>

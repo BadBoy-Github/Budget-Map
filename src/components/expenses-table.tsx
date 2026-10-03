@@ -65,59 +65,115 @@ export function ExpensesTable({ expenses, onUpdateExpense, onDeleteExpense }: Ex
   
   const getCategory = (categoryName: string) => categories.find(c => c.name === categoryName);
 
+  // Shared between the desktop table row and the mobile receipt slip
+  const ExpenseActions = ({ expense }: { expense: Expense }) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-10 w-10 shrink-0">
+          <span className="sr-only">Open menu for {expense.name}</span>
+          <MoreHorizontal className="stroke-[2.5]" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => handleEdit(expense)}>
+          <Pen className="stroke-[2.5]" />
+          <span>Edit</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setDeletingExpenseId(expense.id)}>
+          <Trash className="stroke-[2.5]" />
+          <span>Delete</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
+  const CategoryBadge = ({ expense }: { expense: Expense }) => {
+    const category = getCategory(expense.category);
+    if (!category) return null;
+    return (
+      <Badge variant="outline" className="w-fit max-w-[10rem] gap-1.5 truncate">
+        <category.icon className="size-3.5 shrink-0" style={{ color: category.color }} />
+        <span className="truncate">{expense.category}</span>
+      </Badge>
+    );
+  };
+
   return (
     <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Notes</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
-            <TableHead className="w-[50px]"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {expenses.map((expense) => {
-            const category = getCategory(expense.category);
-            return (
-              <TableRow key={expense.id}>
-                <TableCell className="font-medium">{expense.name}</TableCell>
-                <TableCell>
-                  {category && (
-                    <Badge variant="outline" className="flex w-fit items-center gap-2">
-                      <category.icon className="h-3 w-3" style={{ color: category.color }} />
-                      {expense.category}
-                    </Badge>
+      {expenses.length === 0 ? (
+        <div className="flex flex-col items-center gap-1 rounded-md border-2 border-dashed border-foreground/50 bg-postit/40 px-4 py-8 text-center">
+          <p className="font-headline text-xl font-bold">Nothing scribbled here yet</p>
+          <p className="text-base text-muted-foreground">
+            Add your first expense for this month and it will show up in this list.
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Phones: each expense becomes a little receipt slip */}
+          <ul className="space-y-3 sm:hidden">
+            {expenses.map((expense) => (
+              <li
+                key={expense.id}
+                className="flex items-start justify-between gap-2 rounded-md border-2 border-foreground bg-card p-3 shadow-sketch-soft"
+              >
+                <div className="min-w-0 flex-1 space-y-1">
+                  <p className="truncate text-lg font-medium" title={expense.name}>
+                    {expense.name}
+                  </p>
+                  <CategoryBadge expense={expense} />
+                  {expense.notes && (
+                    <p className="truncate text-sm text-muted-foreground" title={expense.notes}>
+                      {expense.notes}
+                    </p>
                   )}
-                </TableCell>
-                <TableCell className="max-w-[200px] truncate text-muted-foreground" title={expense.notes}>{expense.notes || '-'}</TableCell>
-                <TableCell className="text-right">₹{expense.amount.toFixed(2)}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Open menu</span>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleEdit(expense)}>
-                        <Pen className="mr-2 h-4 w-4" />
-                        <span>Edit</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setDeletingExpenseId(expense.id)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                        <Trash className="mr-2 h-4 w-4" />
-                        <span>Delete</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+                </div>
+                <div className="flex shrink-0 flex-col items-end gap-1">
+                  <span className="whitespace-nowrap font-headline text-lg font-bold">
+                    ₹{expense.amount.toFixed(2)}
+                  </span>
+                  <ExpenseActions expense={expense} />
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {/* Tablet and up: the original table */}
+          <div className="hidden sm:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Notes</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="w-[52px]"><span className="sr-only">Actions</span></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {expenses.map((expense) => (
+                  <TableRow key={expense.id}>
+                    <TableCell className="max-w-[10rem] truncate font-medium md:max-w-[15rem]" title={expense.name}>
+                      {expense.name}
+                    </TableCell>
+                    <TableCell>
+                      <CategoryBadge expense={expense} />
+                    </TableCell>
+                    <TableCell className="max-w-[220px] truncate text-muted-foreground" title={expense.notes}>
+                      {expense.notes || '-'}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-right font-headline text-lg font-bold">
+                      ₹{expense.amount.toFixed(2)}
+                    </TableCell>
+                    <TableCell>
+                      <ExpenseActions expense={expense} />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </>
+      )}
 
       {/* Edit Dialog */}
       <Dialog open={!!editingExpense} onOpenChange={(isOpen) => !isOpen && setEditingExpense(null)}>
@@ -138,7 +194,7 @@ export function ExpensesTable({ expenses, onUpdateExpense, onDeleteExpense }: Ex
               <FormField control={form.control} name="amount" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Amount</FormLabel>
-                  <FormControl><Input type="number" {...field} /></FormControl>
+                  <FormControl><Input type="number" inputMode="decimal" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
@@ -150,7 +206,10 @@ export function ExpensesTable({ expenses, onUpdateExpense, onDeleteExpense }: Ex
                     <SelectContent>
                       {categories.map((cat) => (
                         <SelectItem key={cat.name} value={cat.name}>
-                          <div className="flex items-center gap-2"><cat.icon className="h-4 w-4" />{cat.name}</div>
+                          <div className="flex items-center gap-2">
+                            <cat.icon className="size-4 shrink-0" />
+                            {cat.name}
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -183,7 +242,7 @@ export function ExpensesTable({ expenses, onUpdateExpense, onDeleteExpense }: Ex
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setDeletingExpenseId(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+            <AlertDialogAction onClick={handleDeleteConfirm} variant="destructive">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

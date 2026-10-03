@@ -26,8 +26,8 @@ export function DeleteMonthDialog({ onDelete, selectedMonth, disabled }: DeleteM
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive" size="icon" className="h-8 w-8" disabled={disabled}>
-          <Trash className="h-4 w-4" />
+        <Button variant="destructive" size="icon" disabled={disabled} className="shrink-0">
+          <Trash className="stroke-[2.5]" />
           <span className="sr-only">Delete all expenses for this month</span>
         </Button>
       </AlertDialogTrigger>
@@ -36,15 +36,12 @@ export function DeleteMonthDialog({ onDelete, selectedMonth, disabled }: DeleteM
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
             This action cannot be undone. This will permanently delete all expense and budget data for{' '}
-            <strong>{format(selectedMonth, 'MMMM yyyy')}</strong>.
+            <strong className="font-headline text-foreground">{format(selectedMonth, 'MMMM yyyy')}</strong>.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onDelete}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
+          <AlertDialogAction onClick={onDelete} variant="destructive">
             Delete
           </AlertDialogAction>
         </AlertDialogFooter>

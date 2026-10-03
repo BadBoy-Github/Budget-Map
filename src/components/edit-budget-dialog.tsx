@@ -52,13 +52,17 @@ export function EditBudgetDialog({ onUpdateBudget, currentBudget, isBudgetSet }:
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {isBudgetSet ? (
-          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-            <Pen className="h-4 w-4" />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 shrink-0"
+          >
+            <Pen className="stroke-[2.5]" />
             <span className="sr-only">Edit Budget</span>
           </Button>
         ) : (
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
+          <Button className="shrink-0 text-base md:text-lg">
+            <PlusCircle className="stroke-[2.5]" />
             Set Budget
           </Button>
         )}
