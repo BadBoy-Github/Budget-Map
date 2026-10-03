@@ -32,8 +32,8 @@ export function AppLayout({
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-3 px-4 py-3 sm:py-2 md:px-8">
           <div className="flex items-center gap-2.5">
             {/* Logo stamped on the page, slightly off-kilter */}
-            <div className="flex h-11 w-11 -rotate-3 items-center justify-center rounded-md border-[3px] border-foreground bg-primary text-primary-foreground shadow-sketch">
-              <Icons.logo className="size-6 stroke-[2.5]" />
+            <div className="flex h-11 w-11 -rotate-3 items-center justify-center rounded-md border-[3px] border-foreground bg-white text-primary-foreground shadow-sketch">
+              <img src="favicon.ico" alt="" className="" />
             </div>
             <span className="wavy-underline font-headline text-2xl font-bold leading-none sm:text-3xl">
               Budget Map

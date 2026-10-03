@@ -36,10 +36,7 @@ const AlertDialogContent = React.forwardRef<
     <AlertDialogOverlay />
     <AlertDialogPrimitive.Content
       ref={ref}
-      className={cn(
-        "fixed left-1/2 top-1/2 z-50 grid max-h-[90dvh] w-[calc(100vw-2rem)] max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto rounded-lg border-[3px] border-foreground bg-card p-5 text-card-foreground shadow-sketch-lg duration-200 data-[state=open]:animate-sketch-pop data-[state=closed]:animate-sketch-pop-out sm:p-6",
-        className
-      )}
+      className={cn("sketch-sheet", className)}
       {...props}
     />
   </AlertDialogPortal>

@@ -71,7 +71,7 @@
     /* Notebook paper grain */
     background-image: radial-gradient(hsl(var(--paper-dot)) 1px, transparent 1px);
     background-size: 22px 22px;
-    background-attachment: fixed;
+    background-attachment: scroll;
     min-height: 100dvh;
     overflow-x: hidden;
   }
@@ -137,6 +137,12 @@
       transparent 10px 18px
     );
     background-size: 18px 2px;
+  }
+
+  /* Shared cut-paper "sheet" geometry for modal surfaces (dialogs + alert dialogs).
+     Kept in one place so the sketchy positioning never drifts between the two. */
+  .sketch-sheet {
+    @apply fixed left-1/2 top-1/2 z-50 grid max-h-[90dvh] w-[calc(100vw-2rem)] max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto rounded-lg border-[3px] border-foreground bg-card p-5 text-card-foreground shadow-sketch-lg duration-200 data-[state=open]:animate-sketch-pop data-[state=closed]:animate-sketch-pop-out sm:p-6;
   }
 }
 
