@@ -2,6 +2,7 @@ import type { LucideIcon } from 'lucide-react';
 
 export type Expense = {
   id: string;
+  userId?: string;
   name: string;
   amount: number;
   category: string; // Category name
@@ -16,6 +17,14 @@ export type Category = {
 };
 
 export type MonthlyBudget = {
+  userId: string;
   month: string; // "yyyy-MM" format
   total: number;
+};
+
+export type User = {
+  id: string;
+  userId: string; // 13-digit alphanumeric
+  email: string;
+  name: string;
 };

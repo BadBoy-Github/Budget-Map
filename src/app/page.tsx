@@ -6,20 +6,21 @@ import { DashboardContent } from "@/components/dashboard-content";
 import type { Expense, MonthlyBudget } from "@/lib/types";
 import { format, subMonths, addMonths, isSameMonth } from 'date-fns';
 import { LoadingSpinner } from '@/components/loading-spinner';
+import { useAuth, useRequireAuth } from '@/contexts/AuthContext';
 
 export default function Home() {
+  const { user, loading: authLoading } = useRequireAuth();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [monthlyBudgets, setMonthlyBudgets] = useState<MonthlyBudget[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // ─── Fetch all data from MongoDB on initial load ───────────────────────────
   const fetchData = useCallback(async () => {
+    if (!user) return;
     setIsLoading(true);
     try {
       const [expensesRes, budgetsRes] = await Promise.all([
-        fetch('/api/expenses'),
-        fetch('/api/budgets'),
+        fetch('/api/expenses', { credentials: 'include' }),
+        fetch('/api/budgets', { credentials: 'include' }),
       ]);
       if (expensesRes.ok) {
         const data: Expense[] = await expensesRes.json();
@@ -35,7 +36,7 @@ export default function Home() {
       setIsLoading(false);
       setSelectedMonth(new Date());
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchData();
@@ -43,11 +44,12 @@ export default function Home() {
 
   // ─── Add Expense ───────────────────────────────────────────────────────────
   const handleAddExpense = async (newExpense: Omit<Expense, 'id' | 'date'>) => {
-    if (!selectedMonth) return;
+    if (!selectedMonth || !user) return;
     try {
       const res = await fetch('/api/expenses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           ...newExpense,
           date: format(selectedMonth, 'yyyy-MM-dd'),
@@ -68,6 +70,7 @@ export default function Home() {
       const res = await fetch(`/api/expenses/${updatedExpense.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(updatedExpense),
       });
       if (res.ok) {
@@ -82,7 +85,7 @@ export default function Home() {
   // ─── Delete Expense ────────────────────────────────────────────────────────
   const handleDeleteExpense = async (id: string) => {
     try {
-      const res = await fetch(`/api/expenses/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/expenses/${id}`, { method: 'DELETE', credentials: 'include' });
       if (res.ok) {
         setExpenses(prev => prev.filter(exp => exp.id !== id));
       }
@@ -99,6 +102,7 @@ export default function Home() {
       const res = await fetch('/api/budgets', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ month: monthKey, total: newTotal }),
       });
       if (res.ok) {
@@ -123,7 +127,7 @@ export default function Home() {
     if (!selectedMonth) return;
     const monthKey = format(selectedMonth, 'yyyy-MM');
     try {
-      const res = await fetch(`/api/budgets/month/${monthKey}`, { method: 'DELETE' });
+      const res = await fetch(`/api/budgets/month/${monthKey}`, { method: 'DELETE', credentials: 'include' });
       if (res.ok) {
         setExpenses(prev => prev.filter(exp => !isSameMonth(new Date(exp.date), selectedMonth)));
         setMonthlyBudgets(prev => prev.filter(b => b.month !== monthKey));
@@ -154,7 +158,7 @@ export default function Home() {
 
   const isBudgetSet = currentBudget !== null;
 
-  if (!selectedMonth || isLoading) {
+  if (authLoading || isLoading || !user) {
     return <LoadingSpinner />;
   }
 

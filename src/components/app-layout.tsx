@@ -1,13 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Icons } from './icons';
 import { AddExpenseDialog } from './add-expense-dialog';
-import type { Expense } from '@/lib/types';
+import type { Expense, User } from '@/lib/types';
 import { Button } from './ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
 import { format } from 'date-fns';
 import { DeleteMonthDialog } from './delete-month-dialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function AppLayout({ 
   children, 
@@ -26,6 +27,15 @@ export function AppLayout({
   onDeleteMonthExpenses: () => void;
   isBudgetSet: boolean;
 }) {
+  const { user, logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    await logout();
+    setIsLoggingOut(false);
+  };
+
   return (
     <div className="flex min-h-dvh w-full flex-col bg-background">
       <header className="sticky top-0 z-30 border-b-[3px] border-foreground bg-background/95 backdrop-blur-[2px]">
@@ -41,6 +51,30 @@ export function AppLayout({
           </div>
 
           <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:flex-nowrap sm:gap-3">
+            {/* User info & logout */}
+            {user && (
+              <>
+                <span className="hidden items-center gap-1.5 rounded-sm border-2 border-foreground bg-secondary px-2 py-0.5 font-headline text-sm font-bold sm:inline-flex">
+                  <span className="sr-only">Signed in as</span>
+                  {user.userId}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="shrink-0"
+                >
+                  {isLoggingOut ? (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></span>
+                  ) : (
+                    <LogOut className="h-4 w-4 stroke-[2.5]" />
+                  )}
+                  <span className="sr-only">Logout</span>
+                </Button>
+              </>
+            )}
+
             {/* Month pager — the month itself reads like a pinned sticky note */}
             <div className="flex shrink items-center gap-1.5 sm:gap-2">
               <Button

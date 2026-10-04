@@ -2,6 +2,7 @@ import mongoose, { Schema, model, models } from 'mongoose';
 
 export interface IExpense {
   _id?: mongoose.Types.ObjectId | string;
+  userId: string;
   name: string;
   amount: number;
   category: string;
@@ -11,6 +12,7 @@ export interface IExpense {
 
 const ExpenseSchema = new Schema<IExpense>(
   {
+    userId: { type: String, required: true, index: true },
     name: { type: String, required: true },
     amount: { type: Number, required: true },
     category: { type: String, required: true },

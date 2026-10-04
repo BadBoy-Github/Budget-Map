@@ -1,15 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import dbConnect from '@/lib/mongodb';
 import ExpenseModel from '@/lib/models/Expense';
+import { getUserIdFromRequest } from '@/lib/get-user-id';
 
-// GET /api/expenses - fetch all expenses
-export async function GET() {
+// GET /api/expenses - fetch expenses for the authenticated user
+export async function GET(req: NextRequest) {
   try {
     await dbConnect();
-    const expenses = await ExpenseModel.find({}).sort({ date: -1, createdAt: -1 }).lean();
-    // Map _id to id for the frontend
+    const userId = getUserIdFromRequest(req);
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const expenses = await ExpenseModel.find({ userId })
+      .sort({ date: -1, createdAt: -1 })
+      .lean();
     const mapped = expenses.map((e) => ({
       id: e._id!.toString(),
+      userId: e.userId,
       name: e.name,
       amount: e.amount,
       category: e.category,
@@ -23,15 +31,20 @@ export async function GET() {
   }
 }
 
-// POST /api/expenses - add a new expense
+// POST /api/expenses - add a new expense for the authenticated user
 export async function POST(req: NextRequest) {
   try {
     await dbConnect();
+    const userId = getUserIdFromRequest(req);
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const body = await req.json();
     const { name, amount, category, date, notes } = body;
-    const expense = await ExpenseModel.create({ name, amount, category, date, notes });
+    const expense = await ExpenseModel.create({ userId, name, amount, category, date, notes });
     return NextResponse.json({
       id: expense._id.toString(),
+      userId: expense.userId,
       name: expense.name,
       amount: expense.amount,
       category: expense.category,
