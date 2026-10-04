@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import UserModel from '@/lib/models/User';
-import { comparePassword, signJwt } from '@/lib/auth';
+import { comparePassword, signJwt, JWT_EXPIRES_IN } from '@/lib/auth';
 
 // POST /api/auth/login
 export async function POST(req: NextRequest) {
@@ -27,7 +27,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Create token
-    const token = signJwt({ userId: user.userId, email: user.email, name: user.name });
+    const tokenExpiry = body.rememberMe ? '30d' : JWT_EXPIRES_IN;
+    const token = signJwt({ userId: user.userId, email: user.email, name: user.name }, tokenExpiry);
 
     const response = NextResponse.json({
       user: {
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      maxAge: body.rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60, // 30 days or 7 days
       path: '/',
     });
 

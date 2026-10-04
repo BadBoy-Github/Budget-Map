@@ -7,9 +7,11 @@ import type { Expense, MonthlyBudget } from "@/lib/types";
 import { format, subMonths, addMonths, isSameMonth } from 'date-fns';
 import { LoadingSpinner } from '@/components/loading-spinner';
 import { useAuth, useRequireAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const { user, loading: authLoading } = useRequireAuth();
+  const router = useRouter();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [monthlyBudgets, setMonthlyBudgets] = useState<MonthlyBudget[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<Date | null>(null);
@@ -22,6 +24,13 @@ export default function Home() {
         fetch('/api/expenses', { credentials: 'include' }),
         fetch('/api/budgets', { credentials: 'include' }),
       ]);
+      
+      // Handle auth token expiry
+      if (expensesRes.status === 401 || budgetsRes.status === 401) {
+        router.push('/login');
+        return;
+      }
+
       if (expensesRes.ok) {
         const data: Expense[] = await expensesRes.json();
         setExpenses(data);
@@ -36,7 +45,7 @@ export default function Home() {
       setIsLoading(false);
       setSelectedMonth(new Date());
     }
-  }, [user]);
+  }, [user, router]);
 
   useEffect(() => {
     fetchData();
