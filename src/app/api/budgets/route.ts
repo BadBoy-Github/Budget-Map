@@ -40,7 +40,7 @@ export async function PUT(req: NextRequest) {
     const budget = await MonthlyBudgetModel.findOneAndUpdate(
       { userId, month },
       { total },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     ).lean();
     return NextResponse.json({ userId: budget!.userId, month: budget!.month, total: budget!.total });
   } catch (error) {

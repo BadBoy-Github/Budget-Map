@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import UserModel from '@/lib/models/User';
-import { hashPassword, comparePassword, signJwt, generateUserId } from '@/lib/auth';
+import { hashPassword, signJwt, generateUserId } from '@/lib/auth';
 
 // POST /api/auth/register
 export async function POST(req: NextRequest) {

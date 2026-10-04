@@ -20,10 +20,6 @@ const UserSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
-// Create index for faster lookups
-UserSchema.index({ userId: 1 });
-UserSchema.index({ email: 1 });
-
 // Prevent model overwrite upon hot reload in development
 const UserModel = models.User || model<IUser>('User', UserSchema);
 
