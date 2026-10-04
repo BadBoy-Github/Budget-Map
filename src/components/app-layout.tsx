@@ -54,9 +54,9 @@ export function AppLayout({
             {/* User info & logout */}
             {user && (
               <>
-                <span className="hidden items-center gap-1.5 rounded-sm border-2 border-foreground bg-secondary px-2 py-0.5 font-headline text-sm font-bold sm:inline-flex">
+                <span className="hidden items-center gap-1.5 rounded-sm border-2 border-foreground bg-secondary px-2.5 py-0.5 font-headline text-sm font-bold text-muted-foreground sm:inline-flex">
                   <span className="sr-only">Signed in as</span>
-                  {user.userId}
+                  {user.name}
                 </span>
                 <Button
                   variant="ghost"
